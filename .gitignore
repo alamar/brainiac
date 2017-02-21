@@ -1,0 +1,6 @@
+target
+*.csv
+*.png
+*.bak
+*backup*
+*.xls
