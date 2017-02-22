@@ -42,7 +42,7 @@ public class Hominin {
         if (age >= MATURE_AGE && age < OLD_AGE && trigger(r, Trait.REPRODUCTION, 0.1f)) {
             nextStepFates.add(reproduce(r));
         }
-        return (age < FINAL_AGE) && (age < OLD_AGE || trigger(r, Trait.OLD_AGE_SURVIVAL, 0.25f));
+        return (age < FINAL_AGE) && (age < OLD_AGE || trigger(r, Trait.OLD_AGE_SURVIVAL, 0.75f));
     }
 
     private Hominin reproduce(Random r) {
