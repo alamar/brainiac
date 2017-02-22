@@ -29,8 +29,6 @@ public class Model {
         }
     }
 
-    private static final DecimalFormat FMT = new DecimalFormat("0.#####", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
-
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
             System.err.println("Usage: model {model-name} [RNG-seed] [key=value]...");
@@ -83,7 +81,7 @@ public class Model {
         for (int s = 0; s < steps; s++) {
             ListF<Hominin> nextStepFates = Cf.arrayList();
             for (Hominin person : fates) {
-                if (person.liveOn()) {
+                if (person.liveOn(r, nextStepFates)) {
                     nextStepFates.add(person);
                 }
             }
@@ -95,6 +93,9 @@ public class Model {
                 break;
             }
             fates = nextStepFates;
+        }
+        for (int i = 0; i < fates.length(); i += Math.max(1, fates.length() / 20)) {
+            print(out, fates.get(i).toString());
         }
     }
 
