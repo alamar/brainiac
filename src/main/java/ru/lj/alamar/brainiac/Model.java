@@ -63,40 +63,22 @@ public class Model {
             print(out, "model = " + title);
             Random r = new XorShiftRandom(Long.parseLong(model.getProperty("seed")));
             int steps = Integer.parseInt(model.getProperty("steps"));
-            runSimulation(r, model, steps, out);
+            World world = new World(model, r);
+            for (int s = 0; s < steps; s++) {
+                String stats = world.advance();
+                print(out, stats);
+                if (s % 10 == 0) {
+                    out.flush();
+                }
+            }
+
+            ListF<Hominin> fates = world.getFates();
+            for (int i = 0; i < fates.length(); i += Math.max(1, fates.length() / 20)) {
+                Model.print(out, fates.get(i).toString());
+            }
         } finally {
             out.close();
             System.out.println("Simulation complete for model: " + title);
-        }
-    }
-
-    static void runSimulation(Random r, Properties model, int steps, PrintWriter out)
-            throws IOException
-    {
-        ListF<Hominin> fates = Cf.arrayList();
-        int population = Integer.parseInt(model.getProperty("population"));
-        for (int i = 0; i < population; i++) {
-            fates.add(Hominin.create());
-        }
-        for (int s = 0; s < steps; s++) {
-            float dieOffRatio = fates.length() / (float) population;
-            ListF<Hominin> nextStepFates = Cf.arrayList();
-            for (Hominin person : fates) {
-                if (person.liveOn(r, nextStepFates, dieOffRatio)) {
-                    nextStepFates.add(person);
-                }
-            }
-            print(out, "Population size: " + fates.size());
-            if (s % 10 == 0) {
-                out.flush();
-            }
-            if (nextStepFates.isEmpty()) {
-                break;
-            }
-            fates = nextStepFates;
-        }
-        for (int i = 0; i < fates.length(); i += Math.max(1, fates.length() / 20)) {
-            print(out, fates.get(i).toString());
         }
     }
 
