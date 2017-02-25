@@ -66,7 +66,7 @@ public class Model {
             World world = new World(model, r);
             for (int s = 0; s < steps; s++) {
                 String stats = world.advance();
-                print(out, stats);
+                print(out, "Step:" + s + ", " + stats);
                 if (s % 10 == 0) {
                     out.flush();
                 }

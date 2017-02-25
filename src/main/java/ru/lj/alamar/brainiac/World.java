@@ -25,13 +25,30 @@ public class World {
         float dieOffRatio = fates.length() / (float) population;
         ListF<Hominin> nextStepFates = Cf.arrayList();
         for (Hominin person : fates) {
-            if (person.liveOn(r, nextStepFates, dieOffRatio)) {
+
+            if (fates.size() > 1 && person.willReproduce(r)) {
+                Hominin pair = selectOther(r, fates, person);
+                nextStepFates.add(Hominin.reproduce(r, person, pair));
+            }
+
+            if (person.liveOn(r, dieOffRatio)) {
                 nextStepFates.add(person);
             }
         }
 
         fates = nextStepFates;
-        return "Population size: " + fates.size();
+        return "population size: " + fates.size();
+    }
+
+    private static Hominin selectOther(Random r, ListF<Hominin> fates, Hominin person) {
+        if (fates.size() == 1) {
+            throw new IllegalStateException();
+        }
+        Hominin other;
+        do {
+            other = fates.get(r.nextInt(fates.length()));
+        } while (other == person);
+        return other;
     }
 
     public ListF<Hominin> getFates() {

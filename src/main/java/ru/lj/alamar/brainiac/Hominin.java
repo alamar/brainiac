@@ -38,25 +38,28 @@ public class Hominin {
         this.traits = traits;
     }
 
-    public boolean liveOn(Random r, ListF<Hominin> nextStepFates, float dieOffRatio) {
+    public boolean liveOn(Random r, float dieOffRatio) {
         age += 1;
-        if (age >= MATURE_AGE && age < OLD_AGE && trigger(r, Trait.REPRODUCTION, 0.1f)) {
-            nextStepFates.add(reproduce(r));
-        }
         return (age < FINAL_AGE) && (age < OLD_AGE || trigger(r, Trait.OLD_AGE_SURVIVAL, 0.75f))
-                && (trigger(r, Trait.CONSERVATION, 3f - g - Math.max(1, dieOffRatio)));
+                && trigger(r, Trait.CONSERVATION, 3f - g - Math.max(1, dieOffRatio));
     }
 
-    private Hominin reproduce(Random r) {
+    public boolean willReproduce(Random r) {
+        return age >= MATURE_AGE && age < OLD_AGE && trigger(r, Trait.REPRODUCTION, 0.1f);
+    }
+
+    public static Hominin reproduce(Random r, Hominin person, Hominin pair) {
         float[] childTraits = new float[Trait.values().length];
         for (int i = 0; i < childTraits.length; i++) {
-            childTraits[i] = mutate(r, traits[i]);
+            childTraits[i] = mutate(r, person.traits[i], pair.traits[i]);
         }
-        return new Hominin(0, Math.max(mutate(r, g), 1), childTraits);
+        return new Hominin(0, Math.max(mutate(r, person.g, pair.g), 1), childTraits);
     }
 
-    private static float mutate(Random r, float value) {
+    private static float mutate(Random r, float a, float b) {
+        float value = Math.min(a, b) + r.nextFloat() * Math.abs(a - b);
         float mut = r.nextFloat() * 0.05f - 0.025f;
+
         if (mut < 0f) {
             return value * (1f + mut);
         } else {
