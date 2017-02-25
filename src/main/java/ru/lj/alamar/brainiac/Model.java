@@ -79,9 +79,10 @@ public class Model {
             fates.add(Hominin.create());
         }
         for (int s = 0; s < steps; s++) {
+            float dieOffRatio = fates.length() / (float) population;
             ListF<Hominin> nextStepFates = Cf.arrayList();
             for (Hominin person : fates) {
-                if (person.liveOn(r, nextStepFates)) {
+                if (person.liveOn(r, nextStepFates, dieOffRatio)) {
                     nextStepFates.add(person);
                 }
             }

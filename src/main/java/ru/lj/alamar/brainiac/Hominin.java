@@ -12,7 +12,8 @@ public class Hominin {
 
     public enum Trait {
         REPRODUCTION(0),
-        OLD_AGE_SURVIVAL(1)
+        OLD_AGE_SURVIVAL(1),
+        CONSERVATION(2)
         ;
 
         public final int idx;
@@ -37,12 +38,13 @@ public class Hominin {
         this.traits = traits;
     }
 
-    public boolean liveOn(Random r, ListF<Hominin> nextStepFates) {
+    public boolean liveOn(Random r, ListF<Hominin> nextStepFates, float dieOffRatio) {
         age += 1;
         if (age >= MATURE_AGE && age < OLD_AGE && trigger(r, Trait.REPRODUCTION, 0.1f)) {
             nextStepFates.add(reproduce(r));
         }
-        return (age < FINAL_AGE) && (age < OLD_AGE || trigger(r, Trait.OLD_AGE_SURVIVAL, 0.75f));
+        return (age < FINAL_AGE) && (age < OLD_AGE || trigger(r, Trait.OLD_AGE_SURVIVAL, 0.75f))
+                && (trigger(r, Trait.CONSERVATION, 3f - g - Math.max(1, dieOffRatio)));
     }
 
     private Hominin reproduce(Random r) {
