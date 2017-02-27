@@ -5,55 +5,71 @@ import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 import java.util.Random;
 
-import ru.yandex.bolts.collection.ListF;
-
 public class Hominin {
+    public static final int TURN_COST = 5;
+
     private static final DecimalFormat FMT = new DecimalFormat("0.#####", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
 
+    private static final double REPRODUCTION_CHANCE = 0.5;
+    private static final int REPRODUCTION_COST = 10;
+
+    private static int arrayLength;
+
     public enum Trait {
-        REPRODUCTION(0),
-        OLD_AGE_SURVIVAL(1),
-        CONSERVATION(2)
+        HUNT_SKL(0, 1f),
+        FREERIDE_AFF(1, 0.1f),
+//        FREERIDE_SKL(2, 0.25f),
+        DETECT_AFF(3, 0.1f),
+        DETECT_SKL(4, 0.25f),
         ;
 
         public final int idx;
+        public final float baseline;
 
-        private Trait(int idx) {
+        private Trait(int idx, float baseline) {
             this.idx = idx;
+            this.baseline = baseline;
+            if (idx >= arrayLength) {
+                arrayLength = idx + 1;
+            }
         }
     }
 
     public static final int YOUNG_AGE = 0;
     public static final int MATURE_AGE = 10;
-    public static final int OLD_AGE = 20;
     public static final int FINAL_AGE = 30;
 
     private int age;
-    private final float g;
+//    private final float g;
     private float[] traits;
+    private int credit;
 
-    public Hominin(int age, float g, float[] traits) {
-        this.g = g;
+    public Hominin(int age, float[] traits, int credits) {
         this.age = age;
         this.traits = traits;
+        this.credit = credits;
     }
 
-    public boolean liveOn(Random r, float dieOffRatio) {
+    public boolean liveOn(Random r) {
         age += 1;
-        return (age < FINAL_AGE) && (age < OLD_AGE || trigger(r, Trait.OLD_AGE_SURVIVAL, 0.75f))
-                && trigger(r, Trait.CONSERVATION, 3f - g - Math.max(1, dieOffRatio));
+        return age < FINAL_AGE && credit >= 0;
     }
 
     public boolean willReproduce(Random r) {
-        return age >= MATURE_AGE && age < OLD_AGE && trigger(r, Trait.REPRODUCTION, 0.1f);
+        return age >= MATURE_AGE && credit >= REPRODUCTION_COST
+                && r.nextFloat() > REPRODUCTION_CHANCE;
     }
 
     public static Hominin reproduce(Random r, Hominin person, Hominin pair) {
-        float[] childTraits = new float[Trait.values().length];
-        for (int i = 0; i < childTraits.length; i++) {
-            childTraits[i] = mutate(r, person.traits[i], pair.traits[i]);
+        int childCredits = person.credit / 2 + pair.credit / 2 - REPRODUCTION_COST / 2;
+        person.spend(person.credit / 2);
+        pair.spend(pair.credit / 2);
+
+        float[] childTraits = new float[arrayLength];
+        for (Trait trait : Trait.values()) {
+            childTraits[trait.idx] = mutate(r, person.traits[trait.idx], pair.traits[trait.idx]);
         }
-        return new Hominin(0, Math.max(mutate(r, person.g, pair.g), 1), childTraits);
+        return new Hominin(0, childTraits, childCredits);
     }
 
     private static float mutate(Random r, float a, float b) {
@@ -67,21 +83,33 @@ public class Hominin {
         }
     }
 
-    private boolean trigger(Random r, Trait trait, float baseChance) {
+    public boolean trigger(Random r, Trait trait) {
         float traitValue = traits[trait.idx];
-        if (traitValue < 1f) {
+        /*if (traitValue < 1f) {
             traitValue /= g;
         } else {
             traitValue *= g;
         }
-        float chance = baseChance * traitValue;
-        return r.nextFloat() < chance;
+        float chance = baseChance * traitValue;*/
+        return r.nextFloat() < traitValue;
+    }
+
+    public void spend(int cost) {
+        this.credit -= cost;
+    }
+
+    public float trait(Trait trait) {
+        return traits[trait.idx];
+    }
+
+    public boolean underAge() {
+        return age < MATURE_AGE;
     }
 
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
-        result.append(age).append("\t").append(FMT.format(g));
+        result.append(age).append("\t").append(credit);
         for (float trait : traits) {
             result.append("\t").append(FMT.format(trait));
         }
@@ -89,10 +117,11 @@ public class Hominin {
     }
 
     public static Hominin create() {
-        float[] traits = new float[Trait.values().length];
-        for (int i = 0; i < traits.length; i++) {
-            traits[i] = 1f;
+        Trait.values();
+        float[] traits = new float[arrayLength];
+        for (Trait trait : Trait.values()) {
+            traits[trait.idx] = trait.baseline;
         }
-        return new Hominin(MATURE_AGE, 1f, traits);
+        return new Hominin(MATURE_AGE, traits, 10);
     }
 }
