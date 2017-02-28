@@ -103,4 +103,8 @@ public class World {
         return fates.unmodifiable();
     }
 
+    public boolean isEmpty() {
+        return fates.size() <= 1;
+    }
+
 }

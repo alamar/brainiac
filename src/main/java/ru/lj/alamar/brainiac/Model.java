@@ -70,6 +70,9 @@ public class Model {
                 if (s % 10 == 0) {
                     out.flush();
                 }
+                if (world.isEmpty()) {
+                    break;
+                }
             }
 
             ListF<Hominin> fates = world.getFates();
