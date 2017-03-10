@@ -16,11 +16,12 @@ public class Hominin {
     private static int arrayLength;
 
     public enum Trait {
-        HUNT_SKL(0, 1f),
+        HUNT_SKL(0, 0.8f),
         FREERIDE_AFF(1, 0.1f),
 //        FREERIDE_SKL(2, 0.25f),
         DETECT_AFF(3, 0.1f),
-        DETECT_SKL(4, 0.25f),
+        DETECT_SKL(4, 0.1f),
+        CANTRIP_AFF(5, 0.1f),
         ;
 
         public final int idx;
@@ -40,12 +41,15 @@ public class Hominin {
     public static final int FINAL_AGE = 30;
 
     private int age;
-//    private final float g;
+    private final float g;
+    private float effectiveG;
     private float[] traits;
     private int credit;
 
-    public Hominin(int age, float[] traits, int credits) {
+    public Hominin(int age, float g, float effectiveG, float[] traits, int credits) {
         this.age = age;
+        this.g = g;
+        this.effectiveG = effectiveG;
         this.traits = traits;
         this.credit = credits;
     }
@@ -69,22 +73,24 @@ public class Hominin {
         for (Trait trait : Trait.values()) {
             childTraits[trait.idx] = mutate(r, person.traits[trait.idx], pair.traits[trait.idx]);
         }
-        return new Hominin(0, childTraits, childCredits);
+        float childG = mutate(r, person.g, pair.g);
+        return new Hominin(0, childG, childG * r.nextFloat(), childTraits, childCredits);
     }
 
     private static float mutate(Random r, float a, float b) {
         float value = Math.min(a, b) + r.nextFloat() * Math.abs(a - b);
-        float mut = r.nextFloat() * 0.05f - 0.025f;
+        return value;
+        /*float mut = r.nextFloat() * 0.05f - 0.025f;
 
         if (mut < 0f) {
             return value * (1f + mut);
         } else {
-            return 2f - (2f - value) * (1f - mut);
-        }
+            return 1f - (1f - value) * (1f - mut);
+        }*/
     }
 
     public boolean trigger(Random r, Trait trait) {
-        float traitValue = traits[trait.idx];
+        float traitValue = traits[trait.idx] * effectiveG;
         /*if (traitValue < 1f) {
             traitValue /= g;
         } else {
@@ -109,19 +115,19 @@ public class Hominin {
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
-        result.append(age).append("\t").append(credit);
+        result.append(age).append("\t").append(FMT.format(g)).append("\t").append(credit);
         for (float trait : traits) {
             result.append("\t").append(FMT.format(trait));
         }
         return result.toString();
     }
 
-    public static Hominin create() {
+    public static Hominin create(Random r) {
         Trait.values();
         float[] traits = new float[arrayLength];
         for (Trait trait : Trait.values()) {
-            traits[trait.idx] = trait.baseline;
+            traits[trait.idx] = trait.baseline + r.nextFloat() * (1 - trait.baseline);
         }
-        return new Hominin(MATURE_AGE, traits, 10);
+        return new Hominin(MATURE_AGE, 0.25f + 0.75f * r.nextFloat(), 0.25f, traits, 10);
     }
 }
