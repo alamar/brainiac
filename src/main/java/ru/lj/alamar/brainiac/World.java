@@ -13,14 +13,14 @@ public class World {
     private ListF<ListF<Hominin>> tribes;
     private Random r;
     private int population;
-    private int gamePerHunter;
+    private float gamePerHunter;
     private int splitOn;
 
     public World(Properties model, Random r) {
         this.r = r;
         this.tribes = Cf.arrayList();
         this.population = Integer.parseInt(model.getProperty("population"));
-        this.gamePerHunter = Integer.parseInt(model.getProperty("game"));
+        this.gamePerHunter = Float.parseFloat(model.getProperty("game"));
         this.splitOn = Integer.parseInt(model.getProperty("split.on"));
         ListF<Hominin> fates = Cf.arrayList();
         for (int i = 0; i < population; i++) {
@@ -86,7 +86,7 @@ public class World {
                 totalHuntingSkill += person.trait(Trait.HUNT_SKL);
             }
 
-            int game = 10 + (int) (gamePerHunter * totalHuntingSkill);
+            int game = 10 + (int) ((gamePerHunter - Math.log(tribes.size())) * totalHuntingSkill);
 
             ListF<Hominin> eaters = hunters.plus(detectives).plus(expectant).plus(freeriders).plus(underAge);
             while (game > 0 && eaters.isNotEmpty()) {
