@@ -79,14 +79,9 @@ public class Hominin {
 
     private static float mutate(Random r, float a, float b) {
         float value = Math.min(a, b) + r.nextFloat() * Math.abs(a - b);
-        return value;
-        /*float mut = r.nextFloat() * 0.05f - 0.025f;
+        float mut = r.nextFloat() * 0.05f - 0.025f;
 
-        if (mut < 0f) {
-            return value * (1f + mut);
-        } else {
-            return 1f - (1f - value) * (1f - mut);
-        }*/
+        return Math.max(0f, Math.min(1f, value + mut));
     }
 
     public boolean trigger(Random r, Trait trait) {
