@@ -13,7 +13,7 @@ public class Hominin {
     private static final double REPRODUCTION_CHANCE = 0.5;
     private static final int REPRODUCTION_COST = 10;
 
-    private static int arrayLength;
+    public static int arrayLength;
 
     public enum Trait {
         HUNT_SKL(0, 0.8f),
@@ -97,6 +97,10 @@ public class Hominin {
 
     public void spend(int cost) {
         this.credit -= cost;
+    }
+
+    public float g() {
+        return g;
     }
 
     public float trait(Trait trait) {

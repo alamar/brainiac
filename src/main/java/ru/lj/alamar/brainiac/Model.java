@@ -12,6 +12,7 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.Random;
 
+import ru.lj.alamar.brainiac.Hominin.Trait;
 import ru.yandex.bolts.collection.Cf;
 import ru.yandex.bolts.collection.ListF;
 import ru.yandex.bolts.collection.MapF;
@@ -75,9 +76,23 @@ public class Model {
                 }
             }
 
+            float totalG = 0;
+            float[] totalTraits = new float[Hominin.arrayLength];
+
             ListF<Hominin> fates = world.getFates();
-            for (int i = 0; i < fates.length(); i += Math.max(1, fates.length() / 20)) {
-                Model.print(out, fates.get(i).toString());
+            for (int i = 0; i < fates.length(); i++) {
+                Hominin survivor = fates.get(i);
+                totalG += survivor.g();
+                for (Trait trait : Trait.values()) {
+                    totalTraits[trait.idx] += survivor.trait(trait);
+                }
+                if ((i % Math.max(1, fates.length() / 20)) == 0) {
+                    Model.print(out, fates.get(i).toString());
+                }
+            }
+            print(out, "avg G: " + totalG / (float) fates.length());
+            for (Trait trait : Trait.values()) {
+                print(out, "avg " + trait + ": " + totalTraits[trait.idx] / (float) fates.length());
             }
         } finally {
             out.close();
