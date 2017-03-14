@@ -130,6 +130,12 @@ public class Hominin {
     }
 
     public boolean trigger(Random r, Trait trait) {
+        float traitValue = traitAfterMeme(trait);
+        traitValue = traitValue * effectiveG;
+        return r.nextFloat() < traitValue;
+    }
+
+    public float traitAfterMeme(Trait trait) {
         float traitValue = traits[trait.idx];
         for (Meme meme : memes) {
             if (meme != null && meme.trait == trait) {
@@ -140,8 +146,7 @@ public class Hominin {
                 }
             }
         }
-        traitValue = traitValue * effectiveG;
-        return r.nextFloat() < traitValue;
+        return traitValue;
     }
 
     public void spend(int cost) {
@@ -154,6 +159,10 @@ public class Hominin {
 
     public float trait(Trait trait) {
         return traits[trait.idx];
+    }
+
+    public Meme[] memes() {
+        return memes;
     }
 
     public boolean underAge() {

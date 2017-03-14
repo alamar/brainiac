@@ -105,7 +105,7 @@ public class World {
 
             for (Hominin person : hunters.plus(detectives)) {
                 person.spend(2);
-                totalHuntingSkill += person.trait(Trait.HUNT_SKL);
+                totalHuntingSkill += person.traitAfterMeme(Trait.HUNT_SKL);
             }
 
             int game = 10 + (int) ((gamePerHunter - Math.log(tribes.size())) * totalHuntingSkill);
