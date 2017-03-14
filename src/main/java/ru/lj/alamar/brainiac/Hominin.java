@@ -64,7 +64,7 @@ public class Hominin {
                 && r.nextFloat() > REPRODUCTION_CHANCE;
     }
 
-    public static Hominin reproduce(Random r, Hominin person, Hominin pair) {
+    public static Hominin reproduce(Random r, float gEffect, Hominin person, Hominin pair) {
         int childCredits = person.credit / 2 + pair.credit / 2 - REPRODUCTION_COST / 2;
         person.spend(person.credit / 2);
         pair.spend(pair.credit / 2);
@@ -74,7 +74,8 @@ public class Hominin {
             childTraits[trait.idx] = mutate(r, person.traits[trait.idx], pair.traits[trait.idx]);
         }
         float childG = mutate(r, person.g, pair.g);
-        return new Hominin(0, childG, childG * r.nextFloat(), childTraits, childCredits);
+        return new Hominin(0, childG, childG * gEffect + (childG * (1f - gEffect) * r.nextFloat()),
+                childTraits, childCredits);
     }
 
     private static float mutate(Random r, float a, float b) {

@@ -14,6 +14,7 @@ public class World {
     private Random r;
     private int population;
     private float gamePerHunter;
+    private float gEffect;
     private int splitOn;
 
     public World(Properties model, Random r) {
@@ -21,6 +22,7 @@ public class World {
         this.tribes = Cf.arrayList();
         this.population = Integer.parseInt(model.getProperty("population"));
         this.gamePerHunter = Float.parseFloat(model.getProperty("game"));
+        this.gEffect = Float.parseFloat(model.getProperty("g.effect"));
         this.splitOn = Integer.parseInt(model.getProperty("split.on"));
         ListF<Hominin> fates = Cf.arrayList();
         for (int i = 0; i < population; i++) {
@@ -63,7 +65,7 @@ public class World {
             {
                 ListF<Hominin> parents = expectant;
                 while (parents.length() > 1) {
-                    newBorn.add(Hominin.reproduce(r, parents.last(),
+                    newBorn.add(Hominin.reproduce(r, gEffect, parents.last(),
                             parents.get(parents.length() - 2)));
                     parents = parents.rdrop(2);
                 }
