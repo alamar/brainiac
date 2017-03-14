@@ -5,6 +5,10 @@ import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 import java.util.Random;
 
+import ru.yandex.bolts.collection.Cf;
+import ru.yandex.bolts.collection.ListF;
+import ru.yandex.bolts.function.Function1B;
+
 public class Hominin {
     public static final int TURN_COST = 5;
 
@@ -12,6 +16,7 @@ public class Hominin {
 
     private static final double REPRODUCTION_CHANCE = 0.5;
     private static final int REPRODUCTION_COST = 10;
+    private static final int MAX_MEMES = 3;
 
     public static int arrayLength;
 
@@ -22,6 +27,8 @@ public class Hominin {
         DETECT_AFF(3, 0.1f),
         DETECT_SKL(4, 0.1f),
         CANTRIP_AFF(5, 0.1f),
+        //LEARNING_AFF(6, 0.1f),
+        LEARNING_SKL(7, 0.25f),
         ;
 
         public final int idx;
@@ -36,6 +43,21 @@ public class Hominin {
         }
     }
 
+    public static class Meme {
+        public final Trait trait;
+        public final boolean isBoosting;
+
+        public Meme(Trait trait, boolean isBoosting) {
+            this.trait = trait;
+            this.isBoosting = isBoosting;
+        }
+
+        @Override
+        public String toString() {
+            return (isBoosting ? "+" : "-") + trait;
+        }
+    }
+
     public static final int YOUNG_AGE = 0;
     public static final int MATURE_AGE = 10;
     public static final int FINAL_AGE = 30;
@@ -44,6 +66,7 @@ public class Hominin {
     private final float g;
     private float effectiveG;
     private float[] traits;
+    private Meme[] memes;
     private int credit;
 
     public Hominin(int age, float g, float effectiveG, float[] traits, int credits) {
@@ -51,6 +74,7 @@ public class Hominin {
         this.g = g;
         this.effectiveG = effectiveG;
         this.traits = traits;
+        this.memes = new Meme[MAX_MEMES];
         this.credit = credits;
     }
 
@@ -62,6 +86,26 @@ public class Hominin {
     public boolean willReproduce(Random r) {
         return age >= MATURE_AGE && credit >= REPRODUCTION_COST
                 && r.nextFloat() > REPRODUCTION_CHANCE;
+    }
+
+    public boolean discoverMeme(Random r) {
+        Meme discovered = new Meme(Trait.values()[r.nextInt(Trait.values().length)], r.nextBoolean());
+        return pushMeme(discovered);
+    }
+
+    public boolean transferMeme(Random r, Hominin source) {
+        ListF<Meme> memes = Cf.list(source.memes).filter(Function1B.<Meme>notNullF());
+        return memes.isNotEmpty() && pushMeme(memes.get(r.nextInt(memes.size())));
+    }
+
+    private boolean pushMeme(Meme meme) {
+        for (int i = 0; i < memes.length; i++) {
+            if (memes[i] == null) {
+                memes[i] = meme;
+                return true;
+            }
+        }
+        return false;
     }
 
     public static Hominin reproduce(Random r, float gEffect, Hominin person, Hominin pair) {
@@ -86,13 +130,17 @@ public class Hominin {
     }
 
     public boolean trigger(Random r, Trait trait) {
-        float traitValue = traits[trait.idx] * effectiveG;
-        /*if (traitValue < 1f) {
-            traitValue /= g;
-        } else {
-            traitValue *= g;
+        float traitValue = traits[trait.idx];
+        for (Meme meme : memes) {
+            if (meme != null && meme.trait == trait) {
+                if (meme.isBoosting) {
+                    traitValue = 1f - ((1f - traitValue) / 2f);
+                } else {
+                    traitValue /= 2f;
+                }
+            }
         }
-        float chance = baseChance * traitValue;*/
+        traitValue = traitValue * effectiveG;
         return r.nextFloat() < traitValue;
     }
 
@@ -118,6 +166,11 @@ public class Hominin {
         result.append(age).append("\t").append(FMT.format(g)).append("\t").append(credit);
         for (float trait : traits) {
             result.append("\t").append(FMT.format(trait));
+        }
+        for (Meme meme : memes) {
+            if (meme != null) {
+                result.append("\t").append(meme);
+            }
         }
         return result.toString();
     }

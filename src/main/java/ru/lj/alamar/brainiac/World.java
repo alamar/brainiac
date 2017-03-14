@@ -38,6 +38,7 @@ public class World {
         int population = 0;
         for (ListF<Hominin> fates : tribes) {
             ListF<Hominin> underAge = Cf.arrayList();
+            ListF<Hominin> inAge = Cf.arrayList();
             ListF<Hominin> expectant = Cf.arrayList();
             ListF<Hominin> hunters = Cf.arrayList();
             ListF<Hominin> freeriders = Cf.arrayList();
@@ -48,18 +49,37 @@ public class World {
                     deadCount++;
                 } else if (person.underAge()) {
                     underAge.add(person);
-                } else if (person.willReproduce(r)) {
-                    expectant.add(person);
-                } else if (person.trigger(r, Trait.DETECT_AFF)) {
-                    detectives.add(person);
-                } else if (person.trigger(r, Trait.FREERIDE_AFF)) {
-                    freeriders.add(person);
                 } else {
-                    hunters.add(person);
+                    inAge.add(person);
+                    if (person.willReproduce(r)) {
+                        expectant.add(person);
+                    } else if (person.trigger(r, Trait.DETECT_AFF)) {
+                        detectives.add(person);
+                    } else if (person.trigger(r, Trait.FREERIDE_AFF)) {
+                        freeriders.add(person);
+                    } else {
+                        hunters.add(person);
+                    }
                 }
             }
             assert (underAge.size() + expectant.size() + detectives.size() + freeriders.size() + hunters.size()
                     == fates.size() - deadCount);
+
+            for (Hominin child : underAge) {
+                if (inAge.isNotEmpty()/* && child.trigger(r, Trait.LEARNING_AFF)*/) {
+                    if (child.trigger(r, Trait.LEARNING_SKL)) {
+                        if (child.trigger(r, Trait.LEARNING_SKL)) {
+                            if (child.discoverMeme(r)) {
+                                child.spend(1);
+                                continue;
+                            }
+                        }
+                        if (child.transferMeme(r, inAge.get(r.nextInt(inAge.size())))) {
+                            child.spend(1);
+                        }
+                    }
+                }
+            }
 
             ListF<Hominin> newBorn = Cf.arrayList();
             {
