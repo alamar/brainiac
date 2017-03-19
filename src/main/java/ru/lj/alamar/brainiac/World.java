@@ -41,6 +41,7 @@ public class World {
             ListF<Hominin> inAge = Cf.arrayList();
             ListF<Hominin> expectant = Cf.arrayList();
             ListF<Hominin> hunters = Cf.arrayList();
+            ListF<Hominin> potentialLeaders = Cf.arrayList();
             ListF<Hominin> freeriders = Cf.arrayList();
             ListF<Hominin> detectives = Cf.arrayList();
             int deadCount = 0;
@@ -59,6 +60,9 @@ public class World {
                         freeriders.add(person);
                     } else {
                         hunters.add(person);
+                        if (person.trigger(r, Trait.LEADERSHIP)) {
+                            potentialLeaders.add(person);
+                        }
                     }
                 }
             }
@@ -107,8 +111,17 @@ public class World {
                 person.spend(2);
                 totalHuntingSkill += person.traitAfterMeme(Trait.HUNT_SKL);
             }
+            for (Hominin person : potentialLeaders) {
+                person.spend(1);
+            }
+            float coordGamePerHunter = gamePerHunter;
+            if (potentialLeaders.isNotEmpty()) {
+                Hominin leader = potentialLeaders.get(r.nextInt(potentialLeaders.length()));
+                coordGamePerHunter += leader.leadership();
+            }
 
-            int game = 10 + (int) ((gamePerHunter - Math.log(tribes.size())) * totalHuntingSkill);
+            int game = 10 + (int) ((coordGamePerHunter - Math.log(tribes.size()))
+                    * totalHuntingSkill);
 
             ListF<Hominin> eaters = hunters.plus(detectives).plus(expectant).plus(freeriders).plus(underAge);
             while (game > 0 && eaters.isNotEmpty()) {

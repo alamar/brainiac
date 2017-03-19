@@ -29,6 +29,7 @@ public class Hominin {
         CANTRIP_AFF(5, 0.1f),
         //LEARNING_AFF(6, 0.1f),
         LEARNING_SKL(7, 0.25f),
+        LEADERSHIP(8, 0.1f),
         ;
 
         public final int idx;
@@ -147,6 +148,10 @@ public class Hominin {
             }
         }
         return traitValue;
+    }
+
+    public float leadership() {
+        return effectiveG * traitAfterMeme(Trait.LEADERSHIP);
     }
 
     public void spend(int cost) {
