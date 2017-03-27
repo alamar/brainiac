@@ -1,14 +1,20 @@
 package ru.lj.alamar.brainiac;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.Random;
 
+import ru.lj.alamar.brainiac.Hominin.Meme;
 import ru.lj.alamar.brainiac.Hominin.Trait;
 import ru.yandex.bolts.collection.Cf;
 import ru.yandex.bolts.collection.ListF;
 
 public class World {
+
+    private static final DecimalFormat FMT = new DecimalFormat("0.#####", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
 
     private ListF<ListF<Hominin>> tribes;
     private Random r;
@@ -16,6 +22,7 @@ public class World {
     private float gamePerHunter;
     private float gEffect;
     private int splitOn;
+    private float leadershipCoeff;
 
     public World(Properties model, Random r) {
         this.r = r;
@@ -23,6 +30,7 @@ public class World {
         this.population = Integer.parseInt(model.getProperty("population"));
         this.gamePerHunter = Float.parseFloat(model.getProperty("game"));
         this.gEffect = Float.parseFloat(model.getProperty("g.effect"));
+        this.leadershipCoeff = Float.parseFloat(model.getProperty("leadership.coeff"));
         this.splitOn = Integer.parseInt(model.getProperty("split.on"));
         ListF<Hominin> fates = Cf.arrayList();
         for (int i = 0; i < population; i++) {
@@ -78,8 +86,21 @@ public class World {
                                 continue;
                             }
                         }
-                        if (child.transferMeme(r, inAge.get(r.nextInt(inAge.size())))) {
+                        if (child.transferMeme(r, inAge.get(r.nextInt(inAge.size())), true)) {
                             child.spend(1);
+                        }
+                    }
+                }
+            }
+
+            for (Hominin grownup : inAge) {
+                if (underAge.isNotEmpty() && grownup.memes().length > 0) {
+                    for (Hominin child : underAge) {
+                        if (grownup.trigger(r, Trait.TEACHING_SKL)) {
+                            if (child.transferMeme(r, grownup, false)) {
+                                grownup.spend(1);
+                                break;
+                            }
                         }
                     }
                 }
@@ -117,7 +138,7 @@ public class World {
             float coordGamePerHunter = gamePerHunter;
             if (potentialLeaders.isNotEmpty()) {
                 Hominin leader = potentialLeaders.get(r.nextInt(potentialLeaders.length()));
-                coordGamePerHunter += leader.leadership();
+                coordGamePerHunter += leader.leadership() * leadershipCoeff;
             }
 
             int game = 10 + (int) ((coordGamePerHunter - Math.log(tribes.size()))
@@ -169,7 +190,59 @@ public class World {
             }
         }
         this.tribes = nextStepTribes;
-        return "population " + population + " in " + tribes.length() + " tribes";
+        return turnStats(population);
+    }
+
+    private String turnStats(int population) {
+        ListF<String> stats = Cf.arrayList();
+        stats.add(Integer.toString(population));
+        stats.add(Integer.toString(tribes.length()));
+        double totalG = 0.0;
+        double[] totalTraits = new double[Hominin.arrayLength];
+        int[] totalBoostMemes = new int[Hominin.arrayLength];
+        int[] totalInhibMemes = new int[Hominin.arrayLength];
+        for (Hominin hominin : getFates()) {
+            totalG += hominin.g();
+            for (Trait trait : Trait.values()) {
+                totalTraits[trait.idx] += hominin.trait(trait);
+            }
+            for (Meme meme : hominin.memes()) {
+                (meme.isBoosting ? totalBoostMemes : totalInhibMemes)[meme.trait.idx]++;
+            }
+        }
+        stats.add(FMT.format(totalG / (double) population));
+        for (double trait : totalTraits) {
+            stats.add(FMT.format(trait / (double) population));
+        }
+        for (int memes : totalBoostMemes) {
+            stats.add(Integer.toString(memes));
+        }
+        for (int memes : totalInhibMemes) {
+            stats.add(Integer.toString(memes));
+        }
+        return stats.mkString("\t");
+    }
+
+    public String header() {
+        ListF<String> traitColumns = Cf.arrayList();
+        ListF<String> memeBoostColumns = Cf.arrayList();
+        ListF<String> memeInhibColumns = Cf.arrayList();
+        for (Trait trait : Trait.values()) {
+            for (ListF<String> columns : Cf.arrayList(traitColumns, memeBoostColumns, memeInhibColumns)) {
+                while (columns.size() <= trait.idx) {
+                    columns.add("");
+                }
+            }
+            traitColumns.set(trait.idx, trait.tag);
+            memeBoostColumns.set(trait.idx, "+" + trait.tag);
+            memeInhibColumns.set(trait.idx, "-" + trait.tag);
+        }
+
+        return Cf.arrayList("pop", "tribes", "avg g")
+                .plus(traitColumns)
+                .plus(memeBoostColumns)
+                .plus(memeInhibColumns)
+                .mkString("\t");
     }
 
     public ListF<Hominin> getFates() {

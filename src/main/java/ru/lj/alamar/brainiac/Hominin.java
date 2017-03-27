@@ -17,26 +17,30 @@ public class Hominin {
     private static final double REPRODUCTION_CHANCE = 0.5;
     private static final int REPRODUCTION_COST = 10;
     private static final int MAX_MEMES = 3;
+    private static final Meme[] NO_MEMES = new Meme[0];
 
     public static int arrayLength;
 
     public enum Trait {
-        HUNT_SKL(0, 0.8f),
-        FREERIDE_AFF(1, 0.1f),
+        HUNT_SKL(0, "HUNT", 0.8f),
+        FREERIDE_AFF(1, "FRRIDE", 0.25f),
 //        FREERIDE_SKL(2, 0.25f),
-        DETECT_AFF(3, 0.1f),
-        DETECT_SKL(4, 0.1f),
-        CANTRIP_AFF(5, 0.1f),
+        DETECT_AFF(3, "DTC_AF", 0.25f),
+        DETECT_SKL(4, "DTC_SK", 0.25f),
+        CANTRIP_AFF(5, "CANTRP", 0.25f),
         //LEARNING_AFF(6, 0.1f),
-        LEARNING_SKL(7, 0.25f),
-        LEADERSHIP(8, 0.1f),
+        LEARNING_SKL(7, "LEARNG", 0.35f),
+        TEACHING_SKL(8, "TEACHG", 0.25f),
+        LEADERSHIP(9, "LEADSP", 0.25f),
         ;
 
         public final int idx;
+        public final String tag;
         public final float baseline;
 
-        private Trait(int idx, float baseline) {
+        private Trait(int idx, String tag, float baseline) {
             this.idx = idx;
+            this.tag = tag;
             this.baseline = baseline;
             if (idx >= arrayLength) {
                 arrayLength = idx + 1;
@@ -75,7 +79,7 @@ public class Hominin {
         this.g = g;
         this.effectiveG = effectiveG;
         this.traits = traits;
-        this.memes = new Meme[MAX_MEMES];
+        this.memes = NO_MEMES;
         this.credit = credits;
     }
 
@@ -94,17 +98,25 @@ public class Hominin {
         return pushMeme(discovered);
     }
 
-    public boolean transferMeme(Random r, Hominin source) {
-        ListF<Meme> memes = Cf.list(source.memes).filter(Function1B.<Meme>notNullF());
-        return memes.isNotEmpty() && pushMeme(memes.get(r.nextInt(memes.size())));
+    public boolean transferMeme(Random r, Hominin source, boolean passTeaching) {
+        if (source.memes.length == 0) {
+            return false;
+        }
+
+        Meme meme = source.memes[r.nextInt(source.memes.length)];
+        if (!passTeaching && meme.isBoosting && meme.trait == Trait.TEACHING_SKL) {
+            return false;
+        }
+        return pushMeme(meme);
     }
 
     private boolean pushMeme(Meme meme) {
-        for (int i = 0; i < memes.length; i++) {
-            if (memes[i] == null) {
-                memes[i] = meme;
-                return true;
-            }
+        if (memes.length < MAX_MEMES) {
+            Meme[] newMemes = new Meme[memes.length + 1];
+            System.arraycopy(memes, 0, newMemes, 0, memes.length);
+            newMemes[memes.length] = meme;
+            memes = newMemes;
+            return true;
         }
         return false;
     }
@@ -193,7 +205,7 @@ public class Hominin {
         Trait.values();
         float[] traits = new float[arrayLength];
         for (Trait trait : Trait.values()) {
-            traits[trait.idx] = trait.baseline + r.nextFloat() * (1 - trait.baseline);
+            traits[trait.idx] = trait.baseline + (r.nextFloat() - 0.5f) * trait.baseline;
         }
         return new Hominin(MATURE_AGE, 0.25f + 0.75f * r.nextFloat(), 0.25f, traits, 10);
     }

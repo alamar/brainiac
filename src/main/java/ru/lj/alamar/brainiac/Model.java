@@ -66,9 +66,10 @@ public class Model {
             Random r = new XorShiftRandom(Long.parseLong(model.getProperty("seed")));
             int steps = Integer.parseInt(model.getProperty("steps"));
             World world = new World(model, r);
+            print(out, "step\t" + world.header());
             for (int s = 0; s < steps; s++) {
                 String stats = world.advance();
-                print(out, "Step:" + s + ", " + stats);
+                print(out, s + "\t" + stats);
                 if (s % 10 == 0) {
                     out.flush();
                 }
