@@ -128,6 +128,9 @@ public class Hominin {
 
     private static float mutate(Random r, float a, float b) {
         float value = Math.min(a, b) + r.nextFloat() * Math.abs(a - b);
+        if (value == 0f) {
+            return value;
+        }
         float mut = r.nextFloat() * 0.05f - 0.025f;
 
         return Math.max(0f, Math.min(1f, value + mut));
