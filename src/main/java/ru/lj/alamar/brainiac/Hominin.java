@@ -101,7 +101,7 @@ public class Hominin {
     }
 
     private boolean pushMeme(Meme meme) {
-        if (memes.length < s.maxMemes) {
+        if (memes.length < s.maxMemes && traits[meme.trait.idx] > 0f) {
             Meme[] newMemes = new Meme[memes.length + 1];
             System.arraycopy(memes, 0, newMemes, 0, memes.length);
             newMemes[memes.length] = meme;
