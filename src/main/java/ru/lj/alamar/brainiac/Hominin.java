@@ -5,46 +5,34 @@ import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 import java.util.Random;
 
-import ru.yandex.bolts.collection.Cf;
-import ru.yandex.bolts.collection.ListF;
-import ru.yandex.bolts.function.Function1B;
-
 public class Hominin {
     public static final int TURN_COST = 5;
 
     private static final DecimalFormat FMT = new DecimalFormat("0.#####", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
 
-    private static final double REPRODUCTION_CHANCE = 0.5;
     private static final int REPRODUCTION_COST = 10;
-    private static final int MAX_MEMES = 3;
     private static final Meme[] NO_MEMES = new Meme[0];
 
-    public static int arrayLength;
 
     public enum Trait {
-        HUNT_SKL(0, "HUNT", 0.8f),
-        FREERIDE_AFF(1, "FRRIDE", 0.25f),
+        HUNT_SKL(0, "HUNT"),
+        FREERIDE_AFF(1, "FRRIDE"),
 //        FREERIDE_SKL(2, 0.25f),
-        DETECT_AFF(3, "DTC_AF", 0.25f),
-        DETECT_SKL(4, "DTC_SK", 0.25f),
-        CANTRIP_AFF(5, "CANTRP", 0.25f),
+        DETECT_AFF(3, "DTC_AF"),
+        DETECT_SKL(4, "DTC_SK"),
+        CANTRIP_AFF(5, "CANTRP"),
         //LEARNING_AFF(6, 0.1f),
-        LEARNING_SKL(7, "LEARNG", 0.35f),
-        TEACHING_SKL(8, "TEACHG", 0.25f),
-        LEADERSHIP(9, "LEADSP", 0.25f),
+        LEARNING_SKL(7, "LEARNG"),
+        TEACHING_SKL(8, "TEACHG"),
+        LEADERSHIP(9, "LEADSP"),
         ;
 
         public final int idx;
         public final String tag;
-        public final float baseline;
 
-        private Trait(int idx, String tag, float baseline) {
+        private Trait(int idx, String tag) {
             this.idx = idx;
             this.tag = tag;
-            this.baseline = baseline;
-            if (idx >= arrayLength) {
-                arrayLength = idx + 1;
-            }
         }
     }
 
@@ -67,6 +55,7 @@ public class Hominin {
     public static final int MATURE_AGE = 10;
     public static final int FINAL_AGE = 30;
 
+    private final Setup s;
     private int age;
     private final float g;
     private float effectiveG;
@@ -74,7 +63,8 @@ public class Hominin {
     private Meme[] memes;
     private int credit;
 
-    public Hominin(int age, float g, float effectiveG, float[] traits, int credits) {
+    public Hominin(Setup s, int age, float g, float effectiveG, float[] traits, int credits) {
+        this.s = s;
         this.age = age;
         this.g = g;
         this.effectiveG = effectiveG;
@@ -90,7 +80,7 @@ public class Hominin {
 
     public boolean willReproduce(Random r) {
         return age >= MATURE_AGE && credit >= REPRODUCTION_COST
-                && r.nextFloat() > REPRODUCTION_CHANCE;
+                && r.nextFloat() > s.reproduceChance;
     }
 
     public boolean discoverMeme(Random r) {
@@ -111,7 +101,7 @@ public class Hominin {
     }
 
     private boolean pushMeme(Meme meme) {
-        if (memes.length < MAX_MEMES) {
+        if (memes.length < s.maxMemes) {
             Meme[] newMemes = new Meme[memes.length + 1];
             System.arraycopy(memes, 0, newMemes, 0, memes.length);
             newMemes[memes.length] = meme;
@@ -122,16 +112,17 @@ public class Hominin {
     }
 
     public static Hominin reproduce(Random r, float gEffect, Hominin person, Hominin pair) {
+        Setup s = person.s;
         int childCredits = person.credit / 2 + pair.credit / 2 - REPRODUCTION_COST / 2;
         person.spend(person.credit / 2);
         pair.spend(pair.credit / 2);
 
-        float[] childTraits = new float[arrayLength];
+        float[] childTraits = new float[s.arrayLength];
         for (Trait trait : Trait.values()) {
             childTraits[trait.idx] = mutate(r, person.traits[trait.idx], pair.traits[trait.idx]);
         }
         float childG = mutate(r, person.g, pair.g);
-        return new Hominin(0, childG, childG * gEffect + (childG * (1f - gEffect) * r.nextFloat()),
+        return new Hominin(s, 0, childG, childG * gEffect + (childG * (1f - gEffect) * r.nextFloat()),
                 childTraits, childCredits);
     }
 
@@ -201,12 +192,12 @@ public class Hominin {
         return result.toString();
     }
 
-    public static Hominin create(Random r) {
-        Trait.values();
-        float[] traits = new float[arrayLength];
+    public static Hominin create(Setup s, Random r) {
+        float[] traits = new float[s.arrayLength];
         for (Trait trait : Trait.values()) {
-            traits[trait.idx] = trait.baseline + (r.nextFloat() - 0.5f) * trait.baseline;
+            float startingValue = s.startingTraits[trait.idx];
+            traits[trait.idx] = startingValue + (r.nextFloat() - 0.5f) * startingValue;
         }
-        return new Hominin(MATURE_AGE, 0.25f + 0.75f * r.nextFloat(), 0.25f, traits, 10);
+        return new Hominin(s, MATURE_AGE, 0.25f + 0.75f * r.nextFloat(), 0.25f, traits, 10);
     }
 }

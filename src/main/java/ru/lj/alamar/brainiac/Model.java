@@ -5,20 +5,12 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Properties;
 import java.util.Random;
 
-import ru.lj.alamar.brainiac.Hominin.Meme;
-import ru.lj.alamar.brainiac.Hominin.Trait;
 import ru.yandex.bolts.collection.Cf;
 import ru.yandex.bolts.collection.ListF;
-import ru.yandex.bolts.collection.MapF;
-import ru.yandex.bolts.collection.Tuple2;
-import ru.yandex.bolts.collection.Tuple2List;
 
 /**
  * @author ilyak
@@ -78,32 +70,14 @@ public class Model {
                 }
             }
 
-            float totalG = 0;
-            float[] totalTraits = new float[Hominin.arrayLength];
-            MapF<String, Integer> totalMemes = Cf.hashMap();
-
             ListF<Hominin> fates = world.getFates();
             for (int i = 0; i < fates.length(); i++) {
                 Hominin survivor = fates.get(i);
-                totalG += survivor.g();
-                for (Trait trait : Trait.values()) {
-                    totalTraits[trait.idx] += survivor.trait(trait);
-                }
-                for (Meme meme : survivor.memes()) {
-                    if (meme != null) {
-                        String key = meme.toString();
-                        totalMemes.put(key, totalMemes.getOrElse(key, 0) + 1);
-                    }
-                }
+
                 if ((i % Math.max(1, fates.length() / 20)) == 0) {
-                    Model.print(out, fates.get(i).toString());
+                    Model.print(out, survivor.toString());
                 }
             }
-            print(out, "avg G: " + totalG / (float) fates.length());
-            for (Trait trait : Trait.values()) {
-                print(out, "avg " + trait + ": " + totalTraits[trait.idx] / (float) fates.length());
-            }
-            print(out, totalMemes.entries().sortBy2().reverse().mkString("\n", ":\t"));
         } finally {
             out.close();
             System.out.println("Simulation complete for model: " + title);

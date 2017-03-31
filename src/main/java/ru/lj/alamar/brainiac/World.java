@@ -18,23 +18,15 @@ public class World {
 
     private ListF<ListF<Hominin>> tribes;
     private Random r;
-    private int population;
-    private float gamePerHunter;
-    private float gEffect;
-    private int splitOn;
-    private float leadershipCoeff;
+    private Setup s;
 
     public World(Properties model, Random r) {
         this.r = r;
         this.tribes = Cf.arrayList();
-        this.population = Integer.parseInt(model.getProperty("population"));
-        this.gamePerHunter = Float.parseFloat(model.getProperty("game"));
-        this.gEffect = Float.parseFloat(model.getProperty("g.effect"));
-        this.leadershipCoeff = Float.parseFloat(model.getProperty("leadership.coeff"));
-        this.splitOn = Integer.parseInt(model.getProperty("split.on"));
+        this.s = new Setup(model);
         ListF<Hominin> fates = Cf.arrayList();
-        for (int i = 0; i < population; i++) {
-            fates.add(Hominin.create(r));
+        for (int i = 0; i < s.population; i++) {
+            fates.add(Hominin.create(s, r));
         }
         tribes.add(fates);
     }
@@ -110,7 +102,7 @@ public class World {
             {
                 ListF<Hominin> parents = expectant;
                 while (parents.length() > 1) {
-                    newBorn.add(Hominin.reproduce(r, gEffect, parents.last(),
+                    newBorn.add(Hominin.reproduce(r, s.gEffect, parents.last(),
                             parents.get(parents.length() - 2)));
                     parents = parents.rdrop(2);
                 }
@@ -135,10 +127,10 @@ public class World {
             for (Hominin person : potentialLeaders) {
                 person.spend(1);
             }
-            float coordGamePerHunter = gamePerHunter;
+            float coordGamePerHunter = s.gamePerHunter;
             if (potentialLeaders.isNotEmpty()) {
                 Hominin leader = potentialLeaders.get(r.nextInt(potentialLeaders.length()));
-                coordGamePerHunter += leader.leadership() * leadershipCoeff;
+                coordGamePerHunter += leader.leadership() * s.leadershipEffect;
             }
 
             int game = 10 + (int) ((coordGamePerHunter - Math.log(tribes.size()))
@@ -175,8 +167,8 @@ public class World {
                 traveller = fates.first();
             }
 
-            if (fates.size() > splitOn) {
-                int splitAt = 1 + r.nextInt(splitOn - 2);
+            if (fates.size() > s.splitOn) {
+                int splitAt = 1 + r.nextInt(s.splitOn - 2);
                 nextStepTribes.add(Cf.arrayList(fates.take(splitAt)));
                 nextStepTribes.add(Cf.arrayList(fates.drop(splitAt)));
             } else if (fates.isNotEmpty()) {
@@ -198,9 +190,9 @@ public class World {
         stats.add(Integer.toString(population));
         stats.add(Integer.toString(tribes.length()));
         double totalG = 0.0;
-        double[] totalTraits = new double[Hominin.arrayLength];
-        int[] totalBoostMemes = new int[Hominin.arrayLength];
-        int[] totalInhibMemes = new int[Hominin.arrayLength];
+        double[] totalTraits = new double[s.arrayLength];
+        int[] totalBoostMemes = new int[s.arrayLength];
+        int[] totalInhibMemes = new int[s.arrayLength];
         for (Hominin hominin : getFates()) {
             totalG += hominin.g();
             for (Trait trait : Trait.values()) {
