@@ -189,8 +189,8 @@ public class World {
         ListF<String> stats = Cf.arrayList();
         stats.add(Integer.toString(population));
         stats.add(Integer.toString(tribes.length()));
-        double totalG = 0.0;
-        double[] totalTraits = new double[s.arrayLength];
+        float totalG = 0f;
+        float[] totalTraits = new float[s.arrayLength];
         int[] totalBoostMemes = new int[s.arrayLength];
         int[] totalInhibMemes = new int[s.arrayLength];
         for (Hominin hominin : getFates()) {
@@ -202,9 +202,9 @@ public class World {
                 (meme.isBoosting ? totalBoostMemes : totalInhibMemes)[meme.trait.idx]++;
             }
         }
-        stats.add(FMT.format(totalG / (double) population));
-        for (double trait : totalTraits) {
-            stats.add(FMT.format(trait / (double) population));
+        stats.add(FMT.format(totalG / (float) population));
+        for (float trait : totalTraits) {
+            stats.add(FMT.format(trait / (float) population));
         }
         for (int memes : totalBoostMemes) {
             stats.add(Integer.toString(memes));
