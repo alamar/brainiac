@@ -18,13 +18,14 @@ public class Hominin {
         HUNT_SKL(0, "HUNT"),
         FREERIDE_AFF(1, "FRRIDE"),
 //        FREERIDE_SKL(2, 0.25f),
-        DETECT_AFF(3, "DTC_AF"),
-        DETECT_SKL(4, "DTC_SK"),
-        CANTRIP_AFF(5, "CANTRP"),
+        DETECT_AFF(2, "DTC_AF"),
+        DETECT_SKL(3, "DTC_SK"),
+        CANTRIP_AFF(4, "CANTRP"),
         //LEARNING_AFF(6, 0.1f),
-        LEARNING_SKL(7, "LEARNG"),
-        TEACHING_SKL(8, "TEACHG"),
-        LEADERSHIP(9, "LEADSP"),
+        LEARNING_SKL(5, "LEARN"),
+        TEACHING_SKL(6, "TEACH"),
+        LEADERSHIP(7, "LEADSP"),
+        BOASTING(8, "BOAST"),
         ;
 
         public final int idx;

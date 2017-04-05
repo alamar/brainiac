@@ -143,6 +143,12 @@ public class World {
                     if (--game == 0) {
                         break;
                     }
+                    if (eater.trigger(r, Trait.BOASTING)) {
+                        eater.spend(-1);
+                        if (--game == 0) {
+                            break;
+                        }
+                    }
                 }
             }
 
