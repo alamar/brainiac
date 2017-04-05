@@ -16,6 +16,7 @@ public class Setup {
     public final int maxMemes;
     public final float reproduceChance;
     public final float[] startingTraits;
+    public final float startingG;
 
     {
         int arrayLength = 0;
@@ -36,6 +37,7 @@ public class Setup {
         this.maxMemes = Integer.parseInt(model.getProperty("max.memes"));
         this.reproduceChance = Float.parseFloat(model.getProperty("reproduce.chance"));
 
+        this.startingG = Float.parseFloat(model.getProperty("starting.g"));
         this.startingTraits = new float[arrayLength];
         for (Trait trait : Trait.values()) {
             String key = "starting." + trait.name().replaceAll("_", ".").toLowerCase();

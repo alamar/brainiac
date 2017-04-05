@@ -201,6 +201,8 @@ public class Hominin {
             float startingValue = s.startingTraits[trait.idx];
             traits[trait.idx] = startingValue + (r.nextFloat() - 0.5f) * startingValue;
         }
-        return new Hominin(s, MATURE_AGE, 0.25f + 0.75f * r.nextFloat(), 0.25f, traits, 10);
+        return new Hominin(s, MATURE_AGE,
+                s.startingG + (r.nextFloat() - 0.5f) * s.startingG,
+                s.startingG, traits, 10);
     }
 }
