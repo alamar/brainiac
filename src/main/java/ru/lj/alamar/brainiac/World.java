@@ -19,6 +19,7 @@ public class World {
     private ListF<ListF<Hominin>> tribes;
     private Random r;
     private Setup s;
+    private String lastStats = "";
 
     public World(Properties model, Random r) {
         this.r = r;
@@ -188,7 +189,7 @@ public class World {
             }
         }
         this.tribes = nextStepTribes;
-        return turnStats(population);
+        return lastStats = turnStats(population);
     }
 
     private String turnStats(int population) {
@@ -245,6 +246,10 @@ public class World {
 
     public ListF<Hominin> getFates() {
         return tribes.<Hominin>flatten();
+    }
+
+    public String getLastStats() {
+        return lastStats;
     }
 
     public boolean isEmpty() {

@@ -5,7 +5,10 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.Random;
 
@@ -16,6 +19,8 @@ import ru.yandex.bolts.collection.ListF;
  * @author ilyak
  */
 public class Model {
+
+    private static final DecimalFormat FMT = new DecimalFormat("0.#####", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
 
     private static class PropertiesFilter implements FilenameFilter {
         public boolean accept(File dir, String name) {
@@ -54,21 +59,33 @@ public class Model {
                 Cf.list(params).drop(1).mkString(" ");
         try {
             Properties model = loadModel(params, out);
+            String traceOn = model.getProperty("trace.on");
             print(out, "model = " + title);
-            Random r = new XorShiftRandom(Long.parseLong(model.getProperty("seed")));
-            int steps = Integer.parseInt(model.getProperty("steps"));
-            World world = new World(model, r);
-            print(out, "step\t" + world.header());
-            for (int s = 0; s < steps; s++) {
-                String stats = world.advance();
-                print(out, s + "\t" + stats);
-                if (s % 10 == 0) {
-                    out.flush();
-                }
-                if (world.isEmpty()) {
-                    break;
-                }
+            if (traceOn != null) {
+                float value = Float.parseFloat(model.getProperty("from"));
+                float traceTo = Float.parseFloat(model.getProperty("to"));
+                float traceStep = Float.parseFloat(model.getProperty("step"));
+                model.setProperty(traceOn, FMT.format(value));
+                boolean printHeader = true;
+                do try {
+                    World world = runWorld(out, model, false);
+                    if (printHeader) {
+                        print(out, "value\t" + world.header());
+                        printHeader = false;
+                    }
+                    print(out, FMT.format(value) + "\t" + world.getLastStats());
+
+                    value += traceStep;
+                    Properties stepModel = new Properties();
+                    stepModel.putAll(model);
+                    stepModel.setProperty(traceOn, FMT.format(value));
+                    model = stepModel;
+                } catch (Exception e) {
+                    System.err.println(e);
+                } while (value < (traceTo + traceStep));
+                return;
             }
+            World world = runWorld(out, model, true);
 
             ListF<Hominin> fates = world.getFates();
             for (int i = 0; i < fates.length(); i++) {
@@ -82,6 +99,28 @@ public class Model {
             out.close();
             System.out.println("Simulation complete for model: " + title);
         }
+    }
+
+    private static World runWorld(PrintWriter out, Properties model, boolean verbose) {
+        Random r = new XorShiftRandom(Long.parseLong(model.getProperty("seed")));
+        int steps = Integer.parseInt(model.getProperty("steps"));
+        World world = new World(model, r);
+        if (verbose) {
+            print(out, "step\t" + world.header());
+        }
+        for (int s = 1; s <= steps; s++) {
+            String stats = world.advance();
+            if (verbose) {
+                print(out, s + "\t" + stats);
+                if (s % 10 == 0) {
+                    out.flush();
+                }
+            }
+            if (world.isEmpty()) {
+                break;
+            }
+        }
+        return world;
     }
 
     static void print(PrintWriter out, String line) {
